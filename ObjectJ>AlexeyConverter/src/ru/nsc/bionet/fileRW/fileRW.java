@@ -1,4 +1,4 @@
-package ru.nsc.bionet.fileOperator;
+package ru.nsc.bionet.fileRW;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -7,7 +7,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class fileOperator {
+public class fileRW {
 	
 	public static List<String> readFile(String fileName) { //загрузка из файла в массив строк
 		BufferedReader reader;
@@ -15,8 +15,10 @@ public class fileOperator {
 		try {
 			reader = new BufferedReader(new FileReader(fileName));
 			String line = "";
-			while ((line = reader.readLine()) != null) {
-				tempLinesList.add(line);
+			while ((line = reader.readLine()) != null) { //идем до конца файла
+				if (line.isEmpty()) {
+				} else {tempLinesList.add(line.trim()); //если не пустая, то добавляем в список
+				}
 			}
 		}
 		catch (IOException e) {

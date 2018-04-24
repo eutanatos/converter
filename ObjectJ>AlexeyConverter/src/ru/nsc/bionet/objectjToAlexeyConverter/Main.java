@@ -1,14 +1,15 @@
 package ru.nsc.bionet.objectjToAlexeyConverter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import ru.nsc.bionet.fileOperator.fileOperator;
+import ru.nsc.bionet.fileRW.*;
 
 public class Main {
 	static String filePath = ""; //путь к файлу
-	static String fileName = "Results_Ulyana.txt"; 						//имя файла
+	static String fileName = "Results_Sasha.txt"; 						//имя файла
 
 	public static void main(String[] args) {
 		/*
@@ -16,7 +17,7 @@ public class Main {
 		 * @todo переименовать fileOperator -> LeafFileRW
 		 */ 
 		List<String> tempList = new ArrayList<String>(); 				//список для загрузки из файла
-		tempList = fileOperator.readFile(fileName); 					//загружаем
+		tempList = fileRW.readFile(fileName); 					//загружаем во временный список для построчной работы
 
 		/*
 		 * обрабатываем заголовок
@@ -30,7 +31,7 @@ public class Main {
 		int leafLengthIndex = 0;
 		int markerIndex = 0;
 		int fileNameIndex = 0;
-		while (headerTokenized.hasMoreTokens()){								//проходим по токенам, запоминаем индекс заголовков
+		while (headerTokenized.hasMoreTokens()){								//проходим по токенам, запоминаем индексы нужных заголовков
 			String headerPart = headerTokenized.nextToken();
 			switch (headerPart) {
 			case "LeafLength":
@@ -48,9 +49,9 @@ public class Main {
 				break;
 			}
 		}
-		headerOut = headerOut + "Leaf_1\t" + "Leaf_2\t" + "Leaf_3\t" + "Leaf_4\t" + "Leaf_5"; //собираем заголовок, добавляем столбцы с листьями
+		headerOut = headerOut + "Leaf_1\t" + "Leaf_2\t" + "Leaf_3\t" + "Leaf_4\t" + "Leaf_5\t" + "Leaf_6"; //собираем заголовок, добавляем столбцы с листьями
 		System.out.println(headerOut);
-		System.out.println(leafLengthIndex + " " + markerIndex + "\t" + fileNameIndex);
+		//System.out.println(leafLengthIndex + " " + markerIndex + "\t" + fileNameIndex);
 
 		/*
 		 * обрабатываем данные
@@ -59,7 +60,7 @@ public class Main {
 		int markerIndexPrevious = 0; //стартовое значение счетчика маркеров
 		String lineOut = "";//выходные данные, текущая строка
 		List<String> plantsList = new ArrayList<String>(); //выходные данные, построчно в список
-
+		plantsList.add(headerOut); //сразу вставляем заголовок
 		while (tempList.isEmpty() != true) { //пока во входном списке есть строки работаем
 			/*
 			 * формируем блок данных по всем листьям одного растения
@@ -80,24 +81,34 @@ public class Main {
 			//пересобираем входную строку в заданном порядке {маркер растения, имя файла, длина листа 1, ...}
 			if (Integer.parseInt(lineInArray[markerIndex]) == markerIndexPrevious) { //если предыдущая строка относится к тому же растению продолжаем дописывать длины листьев
 				lineOut = lineOut + lineInArray[leafLengthIndex] + "\t"; //дописываем длину следующего листа к выводу
+				System.out.print(lineInArray[leafLengthIndex] + "\t");
 				markerIndexPrevious = Integer.parseInt(lineInArray[markerIndex]); //ставим текущий маркер растения
 			} else {//if (markerIndex !== markerIndexPrevious) //если перешли к следующему маркеру или только начали (первый маркер 1)
 				//скидываем готовую выводную строку в массив, подрезаем на всякий
 				plantsList.add(lineOut.trim());
 				//обнуляем выводную строку под следующее растение
 				lineOut = "";
+				//System.out.print("mkIprev_" + (Integer.parseInt(lineInArray[markerIndex]) - 1));
+				System.out.println("");
 				lineOut = lineInArray[markerIndex] + "\t"; //записываем маркер и имя файла
+				System.out.print(lineInArray[markerIndex] + "\t");
 				lineOut = lineOut + lineInArray[fileNameIndex] + "\t";
+				System.out.print(lineInArray[fileNameIndex] + "\t");
 				lineOut = lineOut + lineInArray[leafLengthIndex] + "\t";//записываем длину 1 листа
-				markerIndexPrevious = markerIndex;
+				System.out.print(lineInArray[leafLengthIndex] + "\t");
+				markerIndexPrevious = Integer.parseInt(lineInArray[markerIndex]);
+				//System.out.print("mkIprev_" + Integer.parseInt(lineInArray[markerIndex]));
 			}	
 		}
 
 		/*
 		 * вывод в файл
 		 */
-		fileOperator.saveResults(plantsList, filePath, fileName);
-	}
-}
+		try {
+			fileRW.saveResults(plantsList, filePath, "transformed_" + fileName);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
+	}
 }
